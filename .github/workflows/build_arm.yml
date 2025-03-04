@@ -22,7 +22,7 @@ jobs:
         with:
           image: docker.io/batonogov/pyinstaller-linux:latest
           options: |
-            --platform linux/arm
+            --platform linux/arm/v7
             --volume ${ github.workspace }}/:/src
           run: |
             pip install -r /src/requirements.txt
