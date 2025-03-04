@@ -11,13 +11,13 @@ def main(args:argparse.Namespace):
         config = yaml.safe_load(f)
 
     for game_config in config['games']:
-        #try:
+        try:
             if 'base' in config:
                 game_config = config['base'] | game_config
             synchronize(game_config)
-        #except Exception as e:
-        #    print(f'Failed to synchronize {game_config["name"]}')
-        #    print(e)
+        except Exception as e:
+            print(f'Failed to synchronize {game_config["name"]}')
+            print(e)
 
 
 def synchronize(config:dict):

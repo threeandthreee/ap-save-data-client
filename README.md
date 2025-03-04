@@ -13,8 +13,8 @@ and rewrite the save file with updates.
 
 ## Usage
 - Edit `config.yaml` to your needs
-- `pip install -r requirements.txt`
-- `python main.py config.yaml`
+- `pip install -r src/requirements.txt`
+- `python src/main.py config.yaml`
 
 ## Notes
 A main thing missing is that in a lot of cases, the save file won't be able
