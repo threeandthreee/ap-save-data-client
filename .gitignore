@@ -174,3 +174,4 @@ cython_debug/
 
 src/wsproto/
 src/h11/
+src/certifi/

@@ -14,22 +14,17 @@ and rewrite the save file with updates.
 ## Libraries
 - https://github.com/python-hyper/wsproto
 - https://github.com/python-hyper/h11
+- https://github.com/certifi/python-certifi
 
-You can just `pip install wsproto` and get both, but retro handhelds tend not
-to have pip so you can just drop them into `src`.
+You can just `pip install -r src/requirements.txt` but retro handhelds tend not
+to have pip so I went with pure python libraries that you can just drop into `src`.
 
 ## Usage
 - Prepare a `config.json` to your needs
 - `python src/main.py config.json`
 
 ## config.json
-```json
-{
-    "rooms": [
-        "<url>"
-    ]
-}
-```
+TODO
 
 ## Notes
 A main thing missing is that in a lot of cases, the save file won't be able

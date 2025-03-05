@@ -4,6 +4,7 @@ import json
 import os
 import socket
 from wsproto import WSConnection, ConnectionType
+from wsproto.utilities import RemoteProtocolError
 from wsproto.events import (
     AcceptConnection,
     Request,
@@ -22,7 +23,7 @@ def main(args:argparse.Namespace):
     for game_config in config['games']:
         game_config = config.get('base',{}) | game_config
         msg = synchronize(game_config) or 'Synchronized'
-        print(f'{game_config['name']}[{game_config['handler']}] - {msg}')
+        print(f"{game_config['name']}[{game_config['handler']}] - {msg}")
 
 
 def synchronize(config:dict):
@@ -35,31 +36,43 @@ def synchronize(config:dict):
         return 'Save file not found'
 
     # initialize handler
-    handler_str = f'handlers.{config['handler']}.handler'
+    handler_str = f"handlers.{config['handler']}.handler"
     handler = importlib.import_module(handler_str).Handler(save_data)
 
     # get outgoing data from handler
     outgoing_checks, victory = handler.send()
 
-    # connect to ap room
-    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    conn.settimeout(5)
-    conn.connect((config['host'], config['port']))
-    ws = WSConnection(ConnectionType.CLIENT)
-    send_recv(ws, conn, Request(host=config['host'], target="server"))
-    if not [e for e in ws.events() if isinstance(e, AcceptConnection)]:
-        return f'Initial connection failed'
-    send_recv(ws, conn)
-    send_recv(ws, conn, Message(data=json.dumps([{
+    # connect to ap room, switch to ssl if fail
+    socket.setdefaulttimeout(5)
+    try:
+        conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conn.connect((config['host'], int(config['port'])))
+        ws = WSConnection(ConnectionType.CLIENT)
+        received = send_recv(ws, conn, Request(host=config['host'], target="/"))
+    except RemoteProtocolError:
+        import ssl
+        import certifi
+        ctx = ssl.create_default_context(cafile=certifi.where())
+        conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conn = ctx.wrap_socket(conn, server_hostname=config['host'])
+        conn.connect((config['host'], int(config['port'])))
+        ws = WSConnection(ConnectionType.CLIENT)
+        received = send_recv(ws, conn, Request(host=config['host'], target="/"))
+
+    if not received.get('AcceptConnection'):
+        return 'Initial connection failed'
+
+    received |= send_recv(ws, conn) # room data
+    received |= send_recv(ws, conn, Message(data=json.dumps([{
         'cmd': 'Connect',
         'name': config['name'],
         'password': config.get('password'),
         **handler.connect_info,
     }])))
-    connected = get_message(ws, 'Connected')
+    connected = received.get('Connected')
     if not connected:
-        connection_refused = get_message(ws, 'ConnectionRefused')
-        return f'Connection refused: {connection_refused.get('errors')}'
+        connection_refused = received.get('ConnectionRefused', {})
+        return f"Connection refused: {connection_refused.get('errors')}"
 
     # sync with server, close connection (get race mode to force response)
     to_send = [{'cmd': 'Sync'}, {'cmd': 'Get', 'keys': 'race_mode'}]
@@ -67,8 +80,8 @@ def synchronize(config:dict):
         to_send.append({'cmd': 'LocationChecks', 'locations': outgoing_checks})
     if victory or config.get('force_victory'):
         to_send.append({'cmd': 'StatusUpdate', 'status': 30})
-    send_recv(ws, conn, Message(data=json.dumps(to_send)))
-    received_items = get_message(ws, 'ReceivedItems')
+    received |= send_recv(ws, conn, Message(data=json.dumps(to_send)))
+    received_items = received.get('ReceivedItems')
 
     close(ws, conn)
 
@@ -80,19 +93,19 @@ def synchronize(config:dict):
         f.write(save_data)
 
 
-def send_recv(ws, conn, msg=None):
+def send_recv(ws, conn, msg=None) -> dict:
     if(msg):
         conn.send(ws.send(msg))
     ws.receive_data(conn.recv(RECEIVE_BYTES) or None)
-
-
-def get_message(ws, cmd):
+    received = {}
     for event in ws.events():
         if isinstance(event, TextMessage):
             msgs = json.loads(event.data)
             for msg in msgs:
-                if msg['cmd'] == cmd:
-                    return msg
+                received[msg['cmd']] = msg
+        elif isinstance(event, AcceptConnection):
+            received['AcceptConnection'] = True
+    return received
 
 
 def close(ws, conn):
