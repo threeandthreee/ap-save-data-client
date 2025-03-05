@@ -11,10 +11,25 @@ So, this client will read a save file,
 check in with an Archipelago room,
 and rewrite the save file with updates.
 
+## Libraries
+- https://github.com/python-hyper/wsproto
+- https://github.com/python-hyper/h11
+
+You can just `pip install wsproto` and get both, but retro handhelds tend not
+to have pip so you can just drop them into `src`.
+
 ## Usage
-- Edit `config.yaml` to your needs
-- `pip install -r src/requirements.txt`
-- `python src/main.py config.yaml`
+- Prepare a `config.json` to your needs
+- `python src/main.py config.json`
+
+## config.json
+```json
+{
+    "rooms": [
+        "<url>"
+    ]
+}
+```
 
 ## Notes
 A main thing missing is that in a lot of cases, the save file won't be able

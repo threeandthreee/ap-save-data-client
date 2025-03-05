@@ -27,13 +27,14 @@ class Handler(HandlerInterface):
         return (locations, victory)
 
     def receive(self, connected, received_items):
-        received_index = self.sdm.get_2(Addr.RECEIVED_INDEX)
-        start_index = received_items['index']
-        for index, item in enumerate(received_items['items']):
-            item_index = start_index + index
-            if item_index == received_index:
-                item_name = ap_item_to_ladxr[item['item']]
-                self.item_giver.give(item_name)
-                received_index += 1
-        self.sdm.set_2(Addr.RECEIVED_INDEX, received_index)
+        if(received_items and received_items['items']):
+            received_index = self.sdm.get_2(Addr.RECEIVED_INDEX)
+            start_index = received_items['index']
+            for index, item in enumerate(received_items['items']):
+                item_index = start_index + index
+                if item_index == received_index:
+                    item_name = ap_item_to_ladxr[item['item']]
+                    self.item_giver.give(item_name)
+                    received_index += 1
+            self.sdm.set_2(Addr.RECEIVED_INDEX, received_index)
         return self.sdm.dump()
