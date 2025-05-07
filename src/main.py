@@ -1,8 +1,13 @@
+import os
+import sys
 import argparse
 import importlib
 import json
-import os
 import socket
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "libs"))
+
+import yaml
 from wsproto import WSConnection, ConnectionType
 from wsproto.utilities import RemoteProtocolError
 from wsproto.events import (
@@ -18,12 +23,12 @@ RECEIVE_BYTES = 4096
 
 def main(args:argparse.Namespace):
     with open(args.config_file) as f:
-        config = json.loads(f.read())
+        config = yaml.safe_load(f.read())
 
     for game_config in config['games']:
         game_config = config.get('base',{}) | game_config
         msg = synchronize(game_config) or 'Synchronized'
-        print(f"{game_config['name']}[{game_config['handler']}] - {msg}")
+        print(f"{game_config['label']}[{game_config['handler']}] - {msg}")
 
 
 def synchronize(config:dict):
@@ -115,9 +120,17 @@ def close(ws, conn):
 
 
 if __name__ == "__main__":
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    default_config = os.path.join(script_dir, "config.yaml")
+
     parser = argparse.ArgumentParser(
         description='Archipelago Save Data Client',
-        usage="config_file"
+        usage="%(prog)s [config_file]"
     )
-    parser.add_argument('config_file', help='JSON config file')
+    parser.add_argument(
+        'config_file',
+        nargs='?',
+        default=default_config,
+        help='YAML config file (default: ./config.yaml)'
+    )
     main(parser.parse_args())

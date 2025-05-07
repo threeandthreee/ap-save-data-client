@@ -172,6 +172,4 @@ cython_debug/
 
 .vscode/
 
-src/wsproto/
-src/h11/
-src/certifi/
+libs/

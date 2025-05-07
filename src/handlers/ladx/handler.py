@@ -1,4 +1,4 @@
-from handler_interface import HandlerInterface
+from handlers.handler_interface import HandlerInterface
 from .item_giver import ItemGiver
 from .location_tracker import LocationTracker
 from .util import SaveDataManager, ladxr_loc_to_ap, ap_item_to_ladxr

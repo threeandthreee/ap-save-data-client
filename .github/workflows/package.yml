@@ -1,0 +1,38 @@
+name: Build Release Package
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.0.0
+
+jobs:
+  bundle-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Git
+      run: sudo apt-get install git -y
+
+    - name: Run Build Script
+      run: python build.py
+
+    - name: Prepare Zip Directory
+      run: |
+        mkdir ap-save-data-client
+        cp -r src/* ap-save-data-client/
+        zip -r ap-save-data-client.zip ap-save-data-client
+
+    - name: Upload Release Artifact
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ap-save-data-client.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

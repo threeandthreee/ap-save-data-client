@@ -12,19 +12,12 @@ check in with an Archipelago room,
 and rewrite the save file with updates.
 
 ## Libraries
-- https://github.com/python-hyper/wsproto
-- https://github.com/python-hyper/h11
-- https://github.com/certifi/python-certifi
-
-You can just `pip install -r src/requirements.txt` but retro handhelds tend not
-to have pip so I went with pure python libraries that you can just drop into `src`.
+Retro handhelds tend not to have pip so I went with pure python libraries.
+Use `build.py` to collect dependencies.
 
 ## Usage
-- Prepare a `config.json` to your needs
-- `python src/main.py config.json`
-
-## config.json
-TODO
+- Prepare a `config.yaml` to your needs
+- `python src/main.py src/config.yaml`
 
 ## Notes
 A main thing missing is that in a lot of cases, the save file won't be able
