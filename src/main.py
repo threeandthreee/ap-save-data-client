@@ -23,7 +23,12 @@ RECEIVE_BYTES = 4096
 
 def main(args:argparse.Namespace):
     with open(args.config_file) as f:
-        config = yaml.safe_load(f.read())
+        if args.config_file.endswith((".yaml", ".yml")):
+            config = yaml.safe_load(f)
+        elif args.config_file.endswith(".json"):
+            config = json.load(f)
+        else:
+            raise ValueError(f"Unsupported config file extension: {args.config_file}")
 
     for game_config in config['games']:
         game_config = config.get('base',{}) | game_config
@@ -131,6 +136,6 @@ if __name__ == "__main__":
         'config_file',
         nargs='?',
         default=default_config,
-        help='YAML config file (default: ./config.yaml)'
+        help='YAML or JSON config file (default: ./config.yaml)'
     )
     main(parser.parse_args())
