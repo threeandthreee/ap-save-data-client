@@ -16,10 +16,40 @@ Retro handhelds tend not to have pip so I went with pure python libraries.
 Use `build.py` to collect dependencies.
 
 ## Usage
-- Prepare a `config.yaml` to your needs
-- `python src/main.py src/config.yaml`
+- Prepare a json config file to your needs
+- `python src/main.py path/to/config.json`
 
-## Notes
-A main thing missing is that in a lot of cases, the save file won't be able
-to tell you if the goal has been completed. I might try to mod a flag into LADX
-in the future.
+## Usage on retro handheld
+- Ensure your handheld can run python 3
+- `python build.py` to collect dependencies.
+- Place contents of src on device somewhere.
+- Prepare a json config file to your needs, place on device.
+- Set up a shell script to run the sync script. Where you place it will depend on the device/firmware.
+
+Example shell script:
+``` bash
+#! /bin/bash
+python /path/to/ap-save-data-client/main.py /path/to/config.json
+```
+
+## Config Example
+``` json
+{
+    "base": {
+        "host": "archipelago.gg",
+        "base_path": "/path/to/your/saves/"
+    },
+    "games": [
+        {
+            "label": "my example game",
+            "port": 12345,
+            "name": "Player1",
+            "password": "secret",
+            "handler": "ladx",
+            "save_file": "path/from/base_path/to/save_file.srm"
+        }
+    ]
+}
+```
+
+The base object is optional, each game object gets merged onto it when processed, so you can set common options.

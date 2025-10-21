@@ -7,7 +7,6 @@ import socket
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "libs"))
 
-import yaml
 from wsproto import WSConnection, ConnectionType
 from wsproto.utilities import RemoteProtocolError
 from wsproto.events import (
@@ -19,21 +18,16 @@ from wsproto.events import (
 )
 
 
-RECEIVE_BYTES = 4096
+RECEIVE_BYTES = 65536
 
 def main(args:argparse.Namespace):
     with open(args.config_file) as f:
-        if args.config_file.endswith((".yaml", ".yml")):
-            config = yaml.safe_load(f)
-        elif args.config_file.endswith(".json"):
-            config = json.load(f)
-        else:
-            raise ValueError(f"Unsupported config file extension: {args.config_file}")
+        config = json.load(f)
 
     for game_config in config['games']:
         game_config = config.get('base',{}) | game_config
         msg = synchronize(game_config) or 'Synchronized'
-        print(f"{game_config['label']}[{game_config['handler']}] - {msg}")
+        print(f"{game_config.get('label', game_config['name'])}[{game_config['handler']}] - {msg}")
 
 
 def synchronize(config:dict):
@@ -88,7 +82,7 @@ def synchronize(config:dict):
     to_send = [{'cmd': 'Sync'}, {'cmd': 'Get', 'keys': 'race_mode'}]
     if outgoing_checks:
         to_send.append({'cmd': 'LocationChecks', 'locations': outgoing_checks})
-    if victory or config.get('force_victory'):
+    if victory:
         to_send.append({'cmd': 'StatusUpdate', 'status': 30})
     received |= send_recv(ws, conn, Message(data=json.dumps(to_send)))
     received_items = received.get('ReceivedItems')
@@ -126,16 +120,14 @@ def close(ws, conn):
 
 if __name__ == "__main__":
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    default_config = os.path.join(script_dir, "config.yaml")
 
     parser = argparse.ArgumentParser(
         description='Archipelago Save Data Client',
-        usage="%(prog)s [config_file]"
+        usage="%(prog)s config_file"
     )
     parser.add_argument(
         'config_file',
         nargs='?',
-        default=default_config,
-        help='YAML or JSON config file (default: ./config.yaml)'
+        help='JSON config file'
     )
     main(parser.parse_args())

@@ -101,7 +101,7 @@ class ItemGiver:
 
     def give_full_heart(self):
         self.increase(Addr.FULL_HEARTS, limit = 14)
-        self.sdm.set(Addr.HEALTH, self.sdm.get(Addr.FULL_HEARTS))
+        #self.sdm.set(Addr.HEALTH, self.sdm.get(Addr.FULL_HEARTS))
 
     def give_1_arrow(self):
         self.give_ammo(Addr.ARROW_COUNT, Addr.MAX_ARROWS, 1)
@@ -137,12 +137,18 @@ class ItemGiver:
         self.sdm.set(Addr.SELECTED_SONG, song-1)
 
     def give_dungeon_item(self, item_name):
-        address = dungeon_item_addresses[item_name[-1] - 1]
-        bit = dungeon_item_types.index(item_name[:-1])
-        if item_name.startswith('KEY'):
+        dungeon_number = int(item_name[-1]) - 1
+        item_type = item_name[:-1]
+        address = dungeon_item_addresses[dungeon_number]
+        if item_type == 'KEY':
             current = self.sdm.get(address)
-            self.sdm.set(address, current + (1 << bit))
+            key_count = (current & 0xF0) >> 4
+            if key_count < 15:
+                key_count += 1
+            # preserve lower 4 bits (flags), update upper 4 bits
+            self.sdm.set(address, (key_count << 4) | (current & 0x0F))
         else:
+            bit = dungeon_item_types.index(item_type)
             self.set_bit(address, bit)
 
     def give_trading_item(self, item_name):

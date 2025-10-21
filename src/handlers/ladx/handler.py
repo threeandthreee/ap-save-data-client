@@ -9,7 +9,7 @@ class Handler(HandlerInterface):
     connect_info = {
         'game': 'Links Awakening DX',
         'uuid': "Link's Awakening DX Save Data Client",
-        'version': {'major': 0, 'minor': 5, 'build': 1, 'class': 'Version'},
+        'version': {'major': 0, 'minor': 6, 'build': 2, 'class': 'Version'},
         'items_handling': 0b101,
         'tags': ['NoText'],
         'slot_data': False,
@@ -23,7 +23,7 @@ class Handler(HandlerInterface):
     def send(self):
         checks = self.location_tracker.readChecks()
         locations = [ladxr_loc_to_ap[check.id] for check in checks]
-        victory = bool(self.sdm.get(Addr.TRADE_SEQUENCE_ITEM_2) & 1 << 7)
+        victory = bool(self.sdm.get(Addr.VICTORY))
         return (locations, victory)
 
     def receive(self, connected, received_items):
